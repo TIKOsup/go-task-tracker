@@ -4,7 +4,7 @@ Copyright © 2026 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"task-cli/logic"
+	logic "task-cli/src"
 
 	"github.com/spf13/cobra"
 )
