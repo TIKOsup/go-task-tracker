@@ -25,28 +25,52 @@ type Task struct {
 
 func AddTask(cmd *cobra.Command, args []string) {
 	desc := strings.Join(args, " ")
+	if desc == "" {
+		log.Fatal("Task description cannot be empty")
+	}
 
-	task := Task{
-		Id:          0,
+	fileData, err := os.ReadFile(DATA_FILE_PATH)
+	if err != nil {
+		log.Fatal("Error reading file:", err)
+	}
+
+	var tasks Tasks
+	if len(fileData) > 0 {
+		err = json.Unmarshal(fileData, &tasks)
+		if err != nil {
+			log.Fatal("Error parsing JSON:", err)
+		}
+	}
+
+	lastId, err := GetLastTaskId()
+	if err != nil {
+		lastId = 0
+	}
+
+	newTask := Task{
+		Id:          lastId + 1,
 		Description: desc,
 	}
 
-	taskJson, _ := json.Marshal(task)
+	tasks.Tasks = append(tasks.Tasks, newTask)
 
-	fmt.Println(string(taskJson))
-
-	err := os.WriteFile(DATA_FILE_PATH, taskJson, 0644)
+	updatedJson, err := json.MarshalIndent(tasks, "", " ")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error encoding JSON:", err)
 	}
 
-	fmt.Println("Task added successfully (ID: TODO)")
+	err = os.WriteFile(DATA_FILE_PATH, updatedJson, 0644)
+	if err != nil {
+		log.Fatal("Error writing file:", err)
+	}
+
+	fmt.Printf("Task added successfully (ID: %d)\n", newTask.Id)
 }
 
 func ListTasks(cmd *cobra.Command, args []string) {
 	jsonFile, err := os.Open(DATA_FILE_PATH)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error opening file:", err)
 	}
 	defer jsonFile.Close()
 
