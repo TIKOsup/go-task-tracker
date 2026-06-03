@@ -2,9 +2,7 @@ package logic
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"slices"
@@ -43,10 +41,11 @@ func AddTask(cmd *cobra.Command, args []string) {
 		log.Fatal("Error getting data:", err)
 	}
 
-	lastId, err := GetLastTaskId()
-	if err != nil {
+	if len(tasks.Tasks) == 0 {
 		log.Fatal("Error getting last task ID:", err)
 	}
+
+	lastId := tasks.Tasks[len(tasks.Tasks)-1].Id
 
 	newTask := Task{
 		Id:          lastId + 1,
@@ -57,14 +56,9 @@ func AddTask(cmd *cobra.Command, args []string) {
 
 	tasks.Tasks = append(tasks.Tasks, newTask)
 
-	updatedJson, err := json.MarshalIndent(tasks, "", " ")
+	err = SaveData(tasks)
 	if err != nil {
-		log.Fatal("Error encoding JSON:", err)
-	}
-
-	err = os.WriteFile(DATA_FILE_PATH, updatedJson, 0644)
-	if err != nil {
-		log.Fatal("Error writing file:", err)
+		log.Fatal("Error saving data:", err)
 	}
 
 	fmt.Printf("Task added successfully (ID: %d)\n", newTask.Id)
@@ -92,31 +86,6 @@ func ListTasks(cmd *cobra.Command, args []string) {
 	}
 }
 
-func GetLastTaskId() (int, error) {
-	jsonFile, err := os.Open(DATA_FILE_PATH)
-	if err != nil {
-		return 0, errors.New("error opening file: " + err.Error())
-	}
-	defer jsonFile.Close()
-
-	byteValue, err := io.ReadAll(jsonFile)
-	if err != nil {
-		return 0, errors.New("error reading file: " + err.Error())
-	}
-
-	var tasks Tasks
-	err = json.Unmarshal(byteValue, &tasks)
-	if err != nil {
-		return 0, errors.New("error parsing JSON: " + err.Error())
-	}
-
-	if len(tasks.Tasks) == 0 {
-		return 0, nil
-	}
-
-	return tasks.Tasks[len(tasks.Tasks)-1].Id, nil
-}
-
 func DeleteTask(cmd *cobra.Command, args []string) {
 	targetId, err := strconv.Atoi(args[0])
 	if err != nil {
@@ -138,33 +107,12 @@ func DeleteTask(cmd *cobra.Command, args []string) {
 
 	tasks.Tasks = slices.Delete(tasks.Tasks, idx, idx+1)
 
-	updatedJson, err := json.MarshalIndent(tasks, "", " ")
+	err = SaveData(tasks)
 	if err != nil {
-		log.Fatal("Error encoding JSON:", err)
-	}
-
-	err = os.WriteFile(DATA_FILE_PATH, updatedJson, 0644)
-	if err != nil {
-		log.Fatal("Error writing file:", err)
+		log.Fatal("Error saving data:", err)
 	}
 
 	fmt.Printf("Task deleted successfully (ID: %d)\n", targetId)
-}
-
-func GetData() (Tasks, error) {
-	fileData, err := os.ReadFile(DATA_FILE_PATH)
-	if err != nil {
-		return Tasks{}, fmt.Errorf("error reading file: %w", err)
-	}
-
-	var tasks Tasks
-	if len(fileData) > 0 {
-		err = json.Unmarshal(fileData, &tasks)
-		if err != nil {
-			return Tasks{}, fmt.Errorf("error parsing JSON: %w", err)
-		}
-	}
-	return tasks, nil
 }
 
 func UpdateTaskStatus(cmd *cobra.Command, args []string) {
@@ -199,14 +147,9 @@ func UpdateTaskStatus(cmd *cobra.Command, args []string) {
 	tasks.Tasks[idx].Status = newStatus
 	tasks.Tasks[idx].UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
 
-	updatedJson, err := json.MarshalIndent(tasks, "", " ")
+	err = SaveData(tasks)
 	if err != nil {
-		log.Fatal("Error encoding JSON:", err)
-	}
-
-	err = os.WriteFile(DATA_FILE_PATH, updatedJson, 0644)
-	if err != nil {
-		log.Fatal("Error writing file:", err)
+		log.Fatal("Error saving data:", err)
 	}
 
 	fmt.Printf("Task status updated successfully (ID: %d, New Status: %s)\n", targetId, newStatus)
@@ -239,15 +182,39 @@ func UpdateTaskDescription(cmd *cobra.Command, args []string) {
 	tasks.Tasks[idx].Description = newDescription
 	tasks.Tasks[idx].UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
 
+	err = SaveData(tasks)
+	if err != nil {
+		log.Fatal("Error saving data:", err)
+	}
+
+	fmt.Printf("Task description updated successfully (ID: %d)\n", targetId)
+}
+
+func GetData() (Tasks, error) {
+	fileData, err := os.ReadFile(DATA_FILE_PATH)
+	if err != nil {
+		return Tasks{}, fmt.Errorf("error reading file: %w", err)
+	}
+
+	var tasks Tasks
+	if len(fileData) > 0 {
+		err = json.Unmarshal(fileData, &tasks)
+		if err != nil {
+			return Tasks{}, fmt.Errorf("error parsing JSON: %w", err)
+		}
+	}
+	return tasks, nil
+}
+
+func SaveData(tasks Tasks) error {
 	updatedJson, err := json.MarshalIndent(tasks, "", " ")
 	if err != nil {
-		log.Fatal("Error encoding JSON:", err)
+		return fmt.Errorf("error encoding JSON: %w", err)
 	}
 
 	err = os.WriteFile(DATA_FILE_PATH, updatedJson, 0644)
 	if err != nil {
-		log.Fatal("Error writing file:", err)
+		return fmt.Errorf("error writing file: %w", err)
 	}
-
-	fmt.Printf("Task description updated successfully (ID: %d)\n", targetId)
+	return nil
 }
