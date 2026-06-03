@@ -16,6 +16,9 @@ import (
 )
 
 const DATA_FILE_PATH = "./src/data.json"
+const STATUS_TODO = "todo"
+const STATUS_IN_PROGRESS = "in-progress"
+const STATUS_DONE = "done"
 
 type Tasks struct {
 	Tasks []Task `json:"tasks"`
@@ -24,6 +27,7 @@ type Tasks struct {
 type Task struct {
 	Id          int    `json:"id"`
 	Description string `json:"description"`
+	Status      string `json:"status"`
 	CreatedAt   string `json:"createdAt"`
 }
 
@@ -46,6 +50,7 @@ func AddTask(cmd *cobra.Command, args []string) {
 	newTask := Task{
 		Id:          lastId + 1,
 		Description: desc,
+		Status:      STATUS_TODO,
 		CreatedAt:   time.Now().Format("2006-01-02 15:04:05"),
 	}
 
@@ -71,7 +76,7 @@ func ListTasks(cmd *cobra.Command, args []string) {
 	}
 
 	for _, task := range tasks.Tasks {
-		fmt.Println("ID:", task.Id, "Description:", task.Description)
+		fmt.Println(task)
 	}
 }
 
@@ -148,4 +153,48 @@ func GetData() (Tasks, error) {
 		}
 	}
 	return tasks, nil
+}
+
+func UpdateTaskStatus(cmd *cobra.Command, args []string) {
+	targetId, err := strconv.Atoi(args[0])
+	if err != nil {
+		log.Fatal("Invalid task ID:", err)
+	}
+
+	tasks, err := GetData()
+	if err != nil {
+		log.Fatal("Error getting data:", err)
+	}
+
+	idx := slices.IndexFunc(tasks.Tasks, func(t Task) bool {
+		return t.Id == targetId
+	})
+
+	if idx == -1 {
+		log.Fatalf("Task with ID %d not found", targetId)
+	}
+
+	var newStatus string
+	switch cmd.CalledAs() {
+	case "mark-in-progress":
+		newStatus = STATUS_IN_PROGRESS
+	case "mark-done":
+		newStatus = STATUS_DONE
+	default:
+		log.Fatal("Unknown command:", cmd.CalledAs())
+	}
+
+	tasks.Tasks[idx].Status = newStatus
+
+	updatedJson, err := json.MarshalIndent(tasks, "", " ")
+	if err != nil {
+		log.Fatal("Error encoding JSON:", err)
+	}
+
+	err = os.WriteFile(DATA_FILE_PATH, updatedJson, 0644)
+	if err != nil {
+		log.Fatal("Error writing file:", err)
+	}
+
+	fmt.Printf("Task status updated successfully (ID: %d, New Status: %s)\n", targetId, newStatus)
 }
