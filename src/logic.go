@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -113,4 +115,46 @@ func GetLastTaskId() (int, error) {
 	}
 
 	return tasks.Tasks[len(tasks.Tasks)-1].Id, nil
+}
+
+func DeleteTask(cmd *cobra.Command, args []string) {
+	targetId, err := strconv.Atoi(args[0])
+	if err != nil {
+		log.Fatal("Invalid task ID:", err)
+	}
+
+	fileData, err := os.ReadFile(DATA_FILE_PATH)
+	if err != nil {
+		log.Fatal("Error reading file:", err)
+	}
+
+	var tasks Tasks
+	if len(fileData) > 0 {
+		err = json.Unmarshal(fileData, &tasks)
+		if err != nil {
+			log.Fatal("Error parsing JSON:", err)
+		}
+	}
+
+	idx := slices.IndexFunc(tasks.Tasks, func(t Task) bool {
+		return t.Id == targetId
+	})
+
+	if idx == -1 {
+		log.Fatalf("Task with ID %d not found", targetId)
+	}
+
+	tasks.Tasks = slices.Delete(tasks.Tasks, idx, idx+1)
+
+	updatedJson, err := json.MarshalIndent(tasks, "", " ")
+	if err != nil {
+		log.Fatal("Error encoding JSON:", err)
+	}
+
+	err = os.WriteFile(DATA_FILE_PATH, updatedJson, 0644)
+	if err != nil {
+		log.Fatal("Error writing file:", err)
+	}
+
+	fmt.Printf("Task deleted successfully (ID: %d)\n", targetId)
 }
