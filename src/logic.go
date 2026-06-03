@@ -46,7 +46,7 @@ func AddTask(cmd *cobra.Command, args []string) {
 
 	lastId, err := GetLastTaskId()
 	if err != nil {
-		lastId = 0
+		log.Fatal("Error getting last task ID:", err)
 	}
 
 	newTask := Task{
@@ -111,7 +111,7 @@ func GetLastTaskId() (int, error) {
 	}
 
 	if len(tasks.Tasks) == 0 {
-		return 0, errors.New("no tasks found")
+		return 0, nil
 	}
 
 	return tasks.Tasks[len(tasks.Tasks)-1].Id, nil
