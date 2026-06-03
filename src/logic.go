@@ -13,21 +13,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const DATA_FILE_PATH = "./src/data.json"
-const STATUS_TODO = "todo"
-const STATUS_IN_PROGRESS = "in-progress"
-const STATUS_DONE = "done"
+const dataFilePath = "./src/data.json"
+const statusTodo = "todo"
+const statusInProgress = "in-progress"
+const statusDone = "done"
 
 type Tasks struct {
 	Tasks []Task `json:"tasks"`
 }
 
 type Task struct {
-	Id          int    `json:"id"`
-	Description string `json:"description"`
-	Status      string `json:"status"`
-	CreatedAt   string `json:"createdAt"`
-	UpdatedAt   string `json:"updatedAt,omitempty"`
+	Id          int       `json:"id"`
+	Description string    `json:"description"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt,omitempty"`
 }
 
 func AddTask(cmd *cobra.Command, args []string) {
@@ -41,17 +41,18 @@ func AddTask(cmd *cobra.Command, args []string) {
 		log.Fatal("Error getting data:", err)
 	}
 
+	var lastId int
 	if len(tasks.Tasks) == 0 {
-		log.Fatal("Error getting last task ID:", err)
+		lastId = 0
+	} else {
+		lastId = tasks.Tasks[len(tasks.Tasks)-1].Id
 	}
-
-	lastId := tasks.Tasks[len(tasks.Tasks)-1].Id
 
 	newTask := Task{
 		Id:          lastId + 1,
 		Description: desc,
-		Status:      STATUS_TODO,
-		CreatedAt:   time.Now().Format("2006-01-02 15:04:05"),
+		Status:      statusTodo,
+		CreatedAt:   time.Now(),
 	}
 
 	tasks.Tasks = append(tasks.Tasks, newTask)
@@ -82,7 +83,7 @@ func ListTasks(cmd *cobra.Command, args []string) {
 	}
 
 	for _, task := range tasks.Tasks {
-		fmt.Println(task)
+		fmt.Printf("[%d] %s (%s)\n", task.Id, task.Description, task.Status)
 	}
 }
 
@@ -137,15 +138,15 @@ func UpdateTaskStatus(cmd *cobra.Command, args []string) {
 	var newStatus string
 	switch cmd.CalledAs() {
 	case "mark-in-progress":
-		newStatus = STATUS_IN_PROGRESS
+		newStatus = statusInProgress
 	case "mark-done":
-		newStatus = STATUS_DONE
+		newStatus = statusDone
 	default:
 		log.Fatal("Unknown command:", cmd.CalledAs())
 	}
 
 	tasks.Tasks[idx].Status = newStatus
-	tasks.Tasks[idx].UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
+	tasks.Tasks[idx].UpdatedAt = time.Now()
 
 	err = SaveData(tasks)
 	if err != nil {
@@ -180,7 +181,7 @@ func UpdateTaskDescription(cmd *cobra.Command, args []string) {
 	}
 
 	tasks.Tasks[idx].Description = newDescription
-	tasks.Tasks[idx].UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
+	tasks.Tasks[idx].UpdatedAt = time.Now()
 
 	err = SaveData(tasks)
 	if err != nil {
@@ -191,7 +192,7 @@ func UpdateTaskDescription(cmd *cobra.Command, args []string) {
 }
 
 func GetData() (Tasks, error) {
-	fileData, err := os.ReadFile(DATA_FILE_PATH)
+	fileData, err := os.ReadFile(dataFilePath)
 	if err != nil {
 		return Tasks{}, fmt.Errorf("error reading file: %w", err)
 	}
@@ -212,7 +213,7 @@ func SaveData(tasks Tasks) error {
 		return fmt.Errorf("error encoding JSON: %w", err)
 	}
 
-	err = os.WriteFile(DATA_FILE_PATH, updatedJson, 0644)
+	err = os.WriteFile(dataFilePath, updatedJson, 0644)
 	if err != nil {
 		return fmt.Errorf("error writing file: %w", err)
 	}

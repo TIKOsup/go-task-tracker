@@ -2,28 +2,10 @@
  "tasks": [
   {
    "id": 1,
-   "description": "Some new description",
-   "status": "done",
-   "createdAt": "2026-06-03 12:57:54"
-  },
-  {
-   "id": 2,
-   "description": "Some other description3",
+   "description": "Something new",
    "status": "in-progress",
-   "createdAt": "2026-06-03 13:18:38",
-   "updatedAt": "2026-06-03 22:37:20"
-  },
-  {
-   "id": 3,
-   "description": "something 2",
-   "status": "todo",
-   "createdAt": "2026-06-03 13:23:48"
-  },
-  {
-   "id": 4,
-   "description": "New test task",
-   "status": "todo",
-   "createdAt": "2026-06-03 23:49:31"
+   "createdAt": "2026-06-04T00:21:22.533181+05:00",
+   "updatedAt": "2026-06-04T00:21:50.690602+05:00"
   }
  ]
 }
