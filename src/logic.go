@@ -198,3 +198,42 @@ func UpdateTaskStatus(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("Task status updated successfully (ID: %d, New Status: %s)\n", targetId, newStatus)
 }
+
+func UpdateTaskDescription(cmd *cobra.Command, args []string) {
+	targetId, err := strconv.Atoi(args[0])
+	if err != nil {
+		log.Fatal("Invalid task ID:", err)
+	}
+
+	newDescription := strings.Join(args[1:], " ")
+	if newDescription == "" {
+		log.Fatal("Description cannot be empty")
+	}
+
+	tasks, err := GetData()
+	if err != nil {
+		log.Fatal("Error getting data:", err)
+	}
+
+	idx := slices.IndexFunc(tasks.Tasks, func(t Task) bool {
+		return t.Id == targetId
+	})
+
+	if idx == -1 {
+		log.Fatal("Task with ID %d not found", targetId)
+	}
+
+	tasks.Tasks[idx].Description = newDescription
+
+	updatedJson, err := json.MarshalIndent(tasks, "", " ")
+	if err != nil {
+		log.Fatal("Error encoding JSON:", err)
+	}
+
+	err = os.WriteFile(DATA_FILE_PATH, updatedJson, 0644)
+	if err != nil {
+		log.Fatal("Error writing file:", err)
+	}
+
+	fmt.Printf("Task description updated successfully (ID: %d)\n", targetId)
+}
