@@ -31,17 +31,9 @@ func AddTask(cmd *cobra.Command, args []string) {
 		log.Fatal("Task description cannot be empty")
 	}
 
-	fileData, err := os.ReadFile(DATA_FILE_PATH)
+	tasks, err := GetData()
 	if err != nil {
-		log.Fatal("Error reading file:", err)
-	}
-
-	var tasks Tasks
-	if len(fileData) > 0 {
-		err = json.Unmarshal(fileData, &tasks)
-		if err != nil {
-			log.Fatal("Error parsing JSON:", err)
-		}
+		log.Fatal("Error getting data:", err)
 	}
 
 	lastId, err := GetLastTaskId()
@@ -70,21 +62,9 @@ func AddTask(cmd *cobra.Command, args []string) {
 }
 
 func ListTasks(cmd *cobra.Command, args []string) {
-	jsonFile, err := os.Open(DATA_FILE_PATH)
+	tasks, err := GetData()
 	if err != nil {
-		log.Fatal("Error opening file:", err)
-	}
-	defer jsonFile.Close()
-
-	byteValue, err := io.ReadAll(jsonFile)
-	if err != nil {
-		log.Fatal("Error reading file:", err)
-	}
-
-	var tasks Tasks
-	err = json.Unmarshal(byteValue, &tasks)
-	if err != nil {
-		log.Fatal("Error parsing JSON:", err)
+		log.Fatal("Error getting data:", err)
 	}
 
 	for _, task := range tasks.Tasks {
@@ -123,17 +103,9 @@ func DeleteTask(cmd *cobra.Command, args []string) {
 		log.Fatal("Invalid task ID:", err)
 	}
 
-	fileData, err := os.ReadFile(DATA_FILE_PATH)
+	tasks, err := GetData()
 	if err != nil {
-		log.Fatal("Error reading file:", err)
-	}
-
-	var tasks Tasks
-	if len(fileData) > 0 {
-		err = json.Unmarshal(fileData, &tasks)
-		if err != nil {
-			log.Fatal("Error parsing JSON:", err)
-		}
+		log.Fatal("Error getting data:", err)
 	}
 
 	idx := slices.IndexFunc(tasks.Tasks, func(t Task) bool {
@@ -157,4 +129,20 @@ func DeleteTask(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("Task deleted successfully (ID: %d)\n", targetId)
+}
+
+func GetData() (Tasks, error) {
+	fileData, err := os.ReadFile(DATA_FILE_PATH)
+	if err != nil {
+		return Tasks{}, fmt.Errorf("error reading file: %w", err)
+	}
+
+	var tasks Tasks
+	if len(fileData) > 0 {
+		err = json.Unmarshal(fileData, &tasks)
+		if err != nil {
+			return Tasks{}, fmt.Errorf("error parsing JSON: %w", err)
+		}
+	}
+	return tasks, nil
 }
