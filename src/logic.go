@@ -29,6 +29,7 @@ type Task struct {
 	Description string `json:"description"`
 	Status      string `json:"status"`
 	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updatedAt,omitempty"`
 }
 
 func AddTask(cmd *cobra.Command, args []string) {
@@ -185,6 +186,7 @@ func UpdateTaskStatus(cmd *cobra.Command, args []string) {
 	}
 
 	tasks.Tasks[idx].Status = newStatus
+	tasks.Tasks[idx].UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
 
 	updatedJson, err := json.MarshalIndent(tasks, "", " ")
 	if err != nil {
@@ -224,6 +226,7 @@ func UpdateTaskDescription(cmd *cobra.Command, args []string) {
 	}
 
 	tasks.Tasks[idx].Description = newDescription
+	tasks.Tasks[idx].UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
 
 	updatedJson, err := json.MarshalIndent(tasks, "", " ")
 	if err != nil {
