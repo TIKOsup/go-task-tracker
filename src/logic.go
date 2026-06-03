@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -23,6 +24,7 @@ type Tasks struct {
 type Task struct {
 	Id          int    `json:"id"`
 	Description string `json:"description"`
+	CreatedAt   string `json:"createdAt"`
 }
 
 func AddTask(cmd *cobra.Command, args []string) {
@@ -44,6 +46,7 @@ func AddTask(cmd *cobra.Command, args []string) {
 	newTask := Task{
 		Id:          lastId + 1,
 		Description: desc,
+		CreatedAt:   time.Now().Format("2006-01-02 15:04:05"),
 	}
 
 	tasks.Tasks = append(tasks.Tasks, newTask)
