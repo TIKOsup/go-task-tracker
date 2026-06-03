@@ -76,6 +76,17 @@ func ListTasks(cmd *cobra.Command, args []string) {
 		log.Fatal("Error getting data:", err)
 	}
 
+	if len(args) == 1 {
+		filter := args[0]
+		filteredTasks := make([]Task, 0, len(tasks.Tasks))
+		for _, t := range tasks.Tasks {
+			if t.Status == filter {
+				filteredTasks = append(filteredTasks, t)
+			}
+		}
+		tasks.Tasks = filteredTasks
+	}
+
 	for _, task := range tasks.Tasks {
 		fmt.Println(task)
 	}

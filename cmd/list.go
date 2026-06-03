@@ -14,6 +14,7 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all tasks",
 	Long:  `List all tasks in the task tracker.`,
+	Args:  cobra.MaximumNArgs(1),
 	Run:   logic.ListTasks,
 }
 
