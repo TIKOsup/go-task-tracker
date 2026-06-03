@@ -220,7 +220,7 @@ func UpdateTaskDescription(cmd *cobra.Command, args []string) {
 	})
 
 	if idx == -1 {
-		log.Fatal("Task with ID %d not found", targetId)
+		log.Fatalf("Task with ID %d not found", targetId)
 	}
 
 	tasks.Tasks[idx].Description = newDescription
