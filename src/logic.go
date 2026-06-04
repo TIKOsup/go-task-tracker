@@ -73,6 +73,11 @@ func ListTasks(cmd *cobra.Command, args []string) {
 
 	if len(args) == 1 {
 		filter := args[0]
+
+		if filter != statusTodo && filter != statusInProgress && filter != statusDone {
+			log.Fatalf("Invalid status filter: %s. Valid options are: %s, %s, %s", filter, statusTodo, statusInProgress, statusDone)
+		}
+
 		filteredTasks := make([]Task, 0, len(tasks.Tasks))
 		for _, t := range tasks.Tasks {
 			if t.Status == filter {
