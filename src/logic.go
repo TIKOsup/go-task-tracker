@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const dataFilePath = "./src/data.json"
+const dataFilePath = "data.json"
 const statusTodo = "todo"
 const statusInProgress = "in-progress"
 const statusDone = "done"
@@ -198,6 +198,13 @@ func UpdateTaskDescription(cmd *cobra.Command, args []string) {
 
 func GetData() (Tasks, error) {
 	fileData, err := os.ReadFile(dataFilePath)
+
+	if os.IsNotExist(err) {
+		return Tasks{
+			Tasks: []Task{},
+		}, nil
+	}
+
 	if err != nil {
 		return Tasks{}, fmt.Errorf("error reading file: %w", err)
 	}
