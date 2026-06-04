@@ -2,6 +2,8 @@
 
 A simple task management CLI app written in Go and using Cobra CLI.
 
+Project idea from [roadmap.sh](https://roadmap.sh/projects/task-tracker).
+
 ## Features
 
 - Add, Update, and Delete tasks
